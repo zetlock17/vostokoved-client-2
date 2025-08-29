@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import AnalysisResult from './AnalysisResult';
-import { ArrowUp, Copy, Edit, Check, X, Star } from 'lucide-react';
+import { ArrowUp, Copy, Edit, Check, X, Star, PanelLeft } from 'lucide-react';
 
 type Message = {
   id: number;
@@ -9,7 +9,13 @@ type Message = {
   text?: string;
 };
 
-const ChatComponent = () => {
+type ChatComponentProps = {
+  isSidebarCollapsed: boolean;
+  onToggleSidebar: () => void;
+  isMobile: boolean;
+};
+
+const ChatComponent: React.FC<ChatComponentProps> = ({ onToggleSidebar, isMobile }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
@@ -43,7 +49,7 @@ const ChatComponent = () => {
       const aiMessage: Message = {
         id: Date.now() + 1,
         sender: 'ai',
-        component: <AnalysisResult />,
+        component: <AnalysisResult query={userMessage.text || ''} />,
       };
       setMessages(prevMessages => [...prevMessages, aiMessage]);
     }, 1000);
@@ -73,14 +79,21 @@ const ChatComponent = () => {
     navigator.clipboard.writeText(text);
   };
 
+  const ChatHeader = () => (
+    <div className="p-4 flex items-center bg-gray-900 border-b border-gray-800 md:hidden">
+      <button onClick={onToggleSidebar} className="p-1 text-gray-400 hover:text-white mr-4">
+        <PanelLeft size={24} />
+      </button>
+      <h2 className="text-xl font-bold text-white">Востоковед</h2>
+    </div>
+  );
+
   if (messages.length === 0) {
     return (
       <div className="flex flex-col h-screen w-full bg-gray-900 text-white">
+        {isMobile && <ChatHeader />}
         <div className="flex-grow flex flex-col justify-center items-center text-center p-4">
             <div className="flex items-center justify-center w-16 h-16 bg-gray-700 rounded-full mb-6">
-                {/* <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M9.75 3.104v5.714a2.25 2.25 0 01-.659 1.591L5 14.5M9.75 3.104c.252 0 .484.062.702.177m0 0A2.25 2.25 0 0012 5.25v2.754-2.754c0-1.243.99-2.25 2.25-2.25s2.25.99 2.25 2.25v2.754M12 5.25v5.714a2.25 2.25 0 00.659 1.591L19 14.5M12 5.25c-.252 0-.484.062-.702.177M12 14.25L12 19.5m0 0l-2.25-2.25M12 19.5l2.25-2.25" />
-                </svg> */}
                 <Star size={32} />
             </div>
             <h2 className="text-2xl font-semibold text-gray-100">Готов к анализу</h2>
@@ -90,7 +103,7 @@ const ChatComponent = () => {
             </p>
         </div>
         <div className="p-4 bg-gray-900 border-t border-gray-700">
-          <form onSubmit={handleSendMessage} className="flex items-center space-x-4">
+          <form onSubmit={handleSendMessage} className="flex items-center space-x-2 sm:space-x-4">
             <input
               type="text"
               value={inputValue}
@@ -104,9 +117,7 @@ const ChatComponent = () => {
               className="inline-flex items-center justify-center w-10 h-10 text-white bg-gray-700 rounded-full hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-900 disabled:opacity-50"
               disabled={!inputValue.trim()}
             >
-              <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 10l7-7m0 0l7 7m-7-7v18" />
-              </svg>
+              <ArrowUp size={20} />
             </button>
           </form>
         </div>
@@ -116,7 +127,8 @@ const ChatComponent = () => {
 
   return (
     <div className="flex flex-col h-screen w-full bg-gray-900 text-white">
-      <div className="flex-grow p-6 overflow-y-auto">
+      {isMobile && <ChatHeader />}
+      <div className="flex-grow p-2 sm:p-6 overflow-y-auto">
         <div className="flex flex-col space-y-4">
           {messages.map((message) => (
             <div
@@ -167,7 +179,7 @@ const ChatComponent = () => {
         </div>
       </div>
       <div className="p-4 bg-gray-900 border-t border-gray-700">
-        <form onSubmit={handleSendMessage} className="flex items-center space-x-4">
+        <form onSubmit={handleSendMessage} className="flex items-center space-x-2 sm:space-x-4">
           <input
             type="text"
             value={inputValue}
