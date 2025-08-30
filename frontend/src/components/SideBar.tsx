@@ -1,5 +1,8 @@
 import { Link } from "react-router-dom";
 import { PanelLeft, Search, Plus, Clock, MoreHorizontal, PanelRight, X } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { getDialogs } from "../services/DialogServices";
+import type { DialogPreview } from "../types/dialogTypes";
 
 type SideBarProps = {
   isCollapsed: boolean;
@@ -8,14 +11,18 @@ type SideBarProps = {
 };
 
 const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile }) => {
-  const chats = [
-    { id: 1, title: 'Название проекта', description: 'Описание описание описание описание описание описание...', time: '2 часа назад' },
-    { id: 2, title: 'Название проекта', description: 'Описание описание описание описание описание описание...', time: '2 часа назад' },
-    // { id: 3, title: 'Название проекта', description: 'Описание описание описание описание описание описание...', time: '2 часа назад' },
-    // { id: 4, title: 'Название проекта', description: 'Описание описание описание описание описание описание...', time: '2 часа назад' },
-    // { id: 5, title: 'Название проекта', description: 'Описание описание описание описание описание описание...', time: '2 часа назад' },
-    // { id: 6, title: 'Название проекта', description: 'Описание описание описание описание описание описание...', time: '2 часа назад' },
-  ];
+  const [chats, setChats] = useState<DialogPreview[]>([]);
+
+  useEffect(() => {
+    const fetchDialogs = async () => {
+      const response = await getDialogs();
+      if (response.status === 200) {
+        setChats(response.data);
+      }
+    };
+
+    fetchDialogs();
+  }, []);
 
   if (isMobile) {
     if (isCollapsed) {
@@ -46,15 +53,14 @@ const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile }) =>
             {chats.map((chat) => (
               <div key={chat.id} className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer group relative">
                 <div className="flex justify-between items-start">
-                  <h3 className="font-semibold text-white text-sm mb-1 pr-6">{chat.title}</h3>
+                  <h3 className="font-semibold text-white text-sm mb-1 pr-6">{chat.name}</h3>
                   <button className="absolute top-3 right-3 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                     <MoreHorizontal size={16} />
                   </button>
                 </div>
-                <p className="text-gray-400 text-xs mb-2 truncate">{chat.description}</p>
                 <div className="flex items-center text-gray-500 text-xs">
                   <Clock size={12} className="mr-1.5" />
-                  <span>{chat.time}</span>
+                  <span>{new Date(chat.date).toLocaleString()}</span>
                 </div>
               </div>
             ))}
@@ -103,15 +109,14 @@ const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile }) =>
         {chats.map((chat) => (
           <div key={chat.id} className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer group relative">
             <div className="flex justify-between items-start">
-              <h3 className="font-semibold text-white text-sm mb-1 pr-6">{chat.title}</h3>
+              <h3 className="font-semibold text-white text-sm mb-1 pr-6">{chat.name}</h3>
               <button className="absolute top-3 right-3 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
                 <MoreHorizontal size={16} />
               </button>
             </div>
-            <p className="text-gray-400 text-xs mb-2 truncate">{chat.description}</p>
             <div className="flex items-center text-gray-500 text-xs">
               <Clock size={12} className="mr-1.5" />
-              <span>{chat.time}</span>
+              <span>{new Date(chat.date).toLocaleString()}</span>
             </div>
           </div>
         ))}

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import type { AxiosInstance, AxiosResponse } from 'axios';
+import type { AxiosError, AxiosInstance, AxiosResponse, InternalAxiosRequestConfig } from 'axios';
 
 export interface ApiResponse<T = unknown> {
   data: T;
@@ -15,6 +15,18 @@ const api: AxiosInstance = axios.create({
     'Content-Type': 'application/json',
   }
 });
+
+api.interceptors.request.use(
+  (config: InternalAxiosRequestConfig) => {
+    const sessionId = localStorage.getItem('sessionId');
+    if (sessionId) {
+      config.headers['session-id'] = sessionId;
+    }
+    return config;
+  },
+  (error: AxiosError) => Promise.reject(error)
+);
+
 
 export const getRequest = async <T = unknown>(url: string, params?: Record<string, unknown>): Promise<ApiResponse<T>> => {
   try {
