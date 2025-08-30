@@ -1,4 +1,4 @@
-import { Route, Routes } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 // import Header from './components/Header';
 // import MainPage from './components/MainPage';
 import ChatPage from './components/ChatPage';
@@ -10,7 +10,9 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<ChatPage />} />
+              <Route path="/" element={<Navigate to="/chat/new" />} />
+              <Route path="/chat/new" element={<ChatPage />} />
+              <Route path="/chat/:id" element={<ChatPage />} />
             </Route>
           </Routes>
         </main>

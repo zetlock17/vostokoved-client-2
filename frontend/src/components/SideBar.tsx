@@ -1,28 +1,18 @@
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { PanelLeft, Search, Plus, Clock, MoreHorizontal, PanelRight, X } from 'lucide-react';
-import { useEffect, useState } from "react";
-import { getDialogs } from "../services/DialogServices";
 import type { DialogPreview } from "../types/dialogTypes";
 
 type SideBarProps = {
   isCollapsed: boolean;
   onToggle: () => void;
   isMobile: boolean;
+  chats: DialogPreview[];
+  onDeleteChat: (chatId: number) => void;
 };
 
-const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile }) => {
-  const [chats, setChats] = useState<DialogPreview[]>([]);
-
-  useEffect(() => {
-    const fetchDialogs = async () => {
-      const response = await getDialogs();
-      if (response.status === 200) {
-        setChats(response.data);
-      }
-    };
-
-    fetchDialogs();
-  }, []);
+const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile, chats, onDeleteChat }) => {
+  const [openMenuId, setOpenMenuId] = useState<number | null>(null);
 
   if (isMobile) {
     if (isCollapsed) {
@@ -40,29 +30,51 @@ const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile }) =>
           </div>
 
           <div className="p-4">
-            <button className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-between text-sm transition duration-300">
+            <Link to="/chat/new" className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-between text-sm transition duration-300">
               <div className="flex items-center">
                 <Plus size={16} className="mr-2"/>
                 Новый чат
               </div>
-              <kbd className="px-2 py-1 text-xs font-sans text-gray-400 bg-gray-900 rounded border border-gray-700">Ctrl + K</kbd>
-            </button>
+              <kbd className="px-2 py-1 text-xs font-sans text-gray-400 bg-gray-900 rounded border border-gray-700">Начать!</kbd>
+            </Link>
           </div>
 
           <div className="flex-1 overflow-y-auto px-4 space-y-2 scrollbar-hide">
             {chats.map((chat) => (
-              <div key={chat.id} className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer group relative">
+              <Link to={`/chat/${chat.id}`} key={chat.id} className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer group relative block">
                 <div className="flex justify-between items-start">
                   <h3 className="font-semibold text-white text-sm mb-1 pr-6">{chat.name}</h3>
-                  <button className="absolute top-3 right-3 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                  <button 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                    }}
+                    className="absolute top-3 right-3 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+                  >
                     <MoreHorizontal size={16} />
                   </button>
+                  {openMenuId === chat.id && (
+                    <div className="absolute top-8 right-3 bg-gray-800 rounded-md shadow-lg z-10">
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onDeleteChat(chat.id);
+                          setOpenMenuId(null);
+                        }}
+                        className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-700"
+                      >
+                        Удалить
+                      </button>
+                    </div>
+                  )}
                 </div>
                 <div className="flex items-center text-gray-500 text-xs">
                   <Clock size={12} className="mr-1.5" />
                   <span>{new Date(chat.date).toLocaleString()}</span>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -96,29 +108,51 @@ const SideBar: React.FC<SideBarProps> = ({ isCollapsed, onToggle, isMobile }) =>
       </div>
 
       <div className="p-4">
-        <button className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-between text-sm transition duration-300">
+        <Link to="/chat/new" className="w-full bg-gray-800 hover:bg-gray-700 text-gray-300 font-semibold py-2 px-4 rounded-lg flex items-center justify-between text-sm transition duration-300">
           <div className="flex items-center">
             <Plus size={16} className="mr-2"/>
             Новый чат
           </div>
-          <kbd className="px-2 py-1 text-xs font-sans text-gray-400 bg-gray-900 rounded border border-gray-700">Ctrl + K</kbd>
-        </button>
+          <kbd className="px-2 py-1 text-xs font-sans text-gray-400 bg-gray-900 rounded border border-gray-700">Начать!</kbd>
+        </Link>
       </div>
 
       <div className="flex-1 overflow-y-auto px-4 space-y-2 scrollbar-hide">
         {chats.map((chat) => (
-          <div key={chat.id} className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer group relative">
+          <Link to={`/chat/${chat.id}`} key={chat.id} className="p-3 rounded-lg bg-gray-800 hover:bg-gray-700 cursor-pointer group relative block">
             <div className="flex justify-between items-start">
               <h3 className="font-semibold text-white text-sm mb-1 pr-6">{chat.name}</h3>
-              <button className="absolute top-3 right-3 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity">
+              <button 
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  setOpenMenuId(openMenuId === chat.id ? null : chat.id);
+                }}
+                className="absolute top-3 right-3 text-gray-400 hover:text-white opacity-0 group-hover:opacity-100 transition-opacity"
+              >
                 <MoreHorizontal size={16} />
               </button>
+              {openMenuId === chat.id && (
+                <div className="absolute top-8 right-3 bg-gray-800 rounded-md shadow-lg z-10">
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      onDeleteChat(chat.id);
+                      setOpenMenuId(null);
+                    }}
+                    className="block w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-700"
+                  >
+                    Удалить
+                  </button>
+                </div>
+              )}
             </div>
             <div className="flex items-center text-gray-500 text-xs">
               <Clock size={12} className="mr-1.5" />
               <span>{new Date(chat.date).toLocaleString()}</span>
             </div>
-          </div>
+          </Link>
         ))}
       </div>
     </div>

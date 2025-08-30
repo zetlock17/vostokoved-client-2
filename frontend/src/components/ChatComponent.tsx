@@ -1,6 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
-import AnalysisResult from './AnalysisResult';
-import { ArrowUp, Copy, Edit, Check, X, Star, PanelLeft } from 'lucide-react';
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, useParams } from "react-router-dom";
+import { ArrowUp, PanelLeft, Star, Copy, Check, X } from "lucide-react";
+import { newChat, sendMessage, getDialog } from "../services/DialogServices";
+
 
 type Message = {
   id: number;
@@ -13,17 +15,44 @@ type ChatComponentProps = {
   isSidebarCollapsed: boolean;
   onToggleSidebar: () => void;
   isMobile: boolean;
+  onNewChat: () => void;
 };
 
-const ChatComponent: React.FC<ChatComponentProps> = ({ onToggleSidebar, isMobile }) => {
+const ChatComponent: React.FC<ChatComponentProps> = ({ onToggleSidebar, isMobile, onNewChat }) => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputValue, setInputValue] = useState('');
   const messagesEndRef = useRef<null | HTMLDivElement>(null);
   const [editingMessageId, setEditingMessageId] = useState<number | null>(null);
   const [editingText, setEditingText] = useState('');
+  const navigate = useNavigate();
+  const { id: chatId } = useParams<{ id: string }>();
+
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (chatId && chatId !== 'new') {
+        const response = await getDialog(parseInt(chatId, 10));
+        if (response.status === 200 && response.data) {
+          const fetchedMessages: Message[] = response.data.map(msg => ({
+            id: msg.id,
+            text: msg.text,
+            sender: msg.sender === 'model' ? 'ai' : 'user',
+          }));
+          setMessages(fetchedMessages);
+        }
+      } else {
+        setMessages([]);
+      }
+    };
+
+    fetchMessages();
+  }, [chatId]);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const generateUniqueId = () => {
+    return Date.now() + Math.random();
   };
 
   useEffect(() => {
@@ -32,35 +61,61 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ onToggleSidebar, isMobile
     }
   }, [messages]);
 
-  const handleSendMessage = (e: React.FormEvent) => {
+  const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (inputValue.trim() === '') return;
 
     const userMessage: Message = {
-      id: Date.now(),
+      id: generateUniqueId(),
       text: inputValue,
       sender: 'user',
     };
 
+    console.log(chatId)
+
     setMessages(prevMessages => [...prevMessages, userMessage]);
+    const currentInputValue = inputValue;
     setInputValue('');
 
-    setTimeout(() => {
-      const aiMessage: Message = {
-        id: Date.now() + 1,
-        sender: 'ai',
-        component: <AnalysisResult query={userMessage.text || ''} />,
-      };
-      setMessages(prevMessages => [...prevMessages, aiMessage]);
-    }, 1000);
-  };
+    try {
+      let currentChatId = chatId;
+      if (!currentChatId || currentChatId === 'new') {
+        const newChatResponse = await newChat();
+        if (newChatResponse.status === 200 && newChatResponse.data) {
+          const newChatId = (newChatResponse.data as { chat_id: number });
+          navigate(`/chat/${newChatId}`);
+          currentChatId = newChatId.toString();
+          onNewChat();
+        } else {
+          throw new Error("Failed to create new chat");
+        }
+      }
 
-  const handleEdit = (message: Message) => {
-    if (message.text) {
-      setEditingMessageId(message.id);
-      setEditingText(message.text);
+      if (currentChatId) {
+        const sendMessageResponse = await sendMessage(currentInputValue, parseInt(currentChatId, 10));
+        if (sendMessageResponse.data) {
+          const aiMessage: Message = {
+            id: generateUniqueId(),
+            sender: 'ai',
+            text: sendMessageResponse.data.model_message,
+          };
+          setMessages(prevMessages => [...prevMessages, aiMessage]);
+        } else {
+          throw new Error("Failed to get AI response");
+        }
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+      setMessages(prevMessages => prevMessages.filter(msg => msg.id !== userMessage.id));
     }
   };
+
+  // const handleEdit = (message: Message) => {
+  //   if (message.text) {
+  //     setEditingMessageId(message.id);
+  //     setEditingText(message.text);
+  //   }
+  // };
 
   const handleCancelEdit = () => {
     setEditingMessageId(null);
@@ -158,9 +213,9 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ onToggleSidebar, isMobile
                     </div>
                     {editingMessageId !== message.id && (
                       <div className="flex items-center space-x-1 mt-1">
-                          <button onClick={() => handleEdit(message)} className="p-1 text-gray-400 hover:text-white">
+                          {/* <button onClick={() => handleEdit(message)} className="p-1 text-gray-400 hover:text-white">
                               <Edit size={14} />
-                          </button>
+                          </button> */}
                           <button onClick={() => handleCopy(message.text!)} className="p-1 text-gray-400 hover:text-white">
                               <Copy size={14} />
                           </button>
@@ -168,9 +223,11 @@ const ChatComponent: React.FC<ChatComponentProps> = ({ onToggleSidebar, isMobile
                     )}
                   </div>
                 )}
-                {message.sender === 'ai' && (
+                {message.sender === 'ai' && message.text && (
                     <div className="w-full">
-                        {message.component}
+                        <div className="bg-gray-800 text-white rounded-lg px-4 py-2 max-w-lg break-words">
+                            {message.text}
+                        </div>
                     </div>
                 )}
             </div>
