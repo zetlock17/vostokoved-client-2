@@ -86,7 +86,7 @@ type AnalysisResultProps = {
 const AnalysisResult: React.FC<AnalysisResultProps> = ({ query }) => {
   return (
     <div className="w-full">
-        <p className="text-gray-400 mb-4">Понял! Сделаю анализ для: <span className="text-gray-200">{query}</span></p>
+        <p className="text-gray-600 mb-4">Понял! Сделаю анализ для: <span className="text-gray-900 font-semibold">{query}</span></p>
       {analysisData.map((block, index) => (
         <AnalysisBlock
           key={index}

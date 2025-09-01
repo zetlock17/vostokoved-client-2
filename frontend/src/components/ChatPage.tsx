@@ -49,7 +49,7 @@ const ChatPage = () => {
   };
 
   return (
-    <div className="flex flex-row w-full h-screen bg-gray-900">
+    <div className="flex flex-row w-full h-screen bg-white">
         <SideBar 
           chats={chats}
           isCollapsed={isSidebarCollapsed} 

@@ -1,14 +1,11 @@
-import { Link } from "react-router-dom";
+import { Link } from "react-router-dom"
 
 const Header = () => {
   return (
-    <header className="bg-gray-900 text-white">
-      <div className="container mx-auto px-6 py-4 flex items-baseline justify-start space-x-4">
-        <Link to="/" className="text-2xl font-bold text-white">Востоковед</Link>
-        {/* <Link to="/chat" className="text-gray-300 text-lg">Чат</Link> */}
-      </div>
+    <header className="w-full p-4 flex justify-center items-center sticky top-0 z-50 bg-white/30 backdrop-blur-lg">
+        <Link to="/" className="text-2xl font-bold text-gray-900">Востоковед</Link>
     </header>
   )
 }
 
-export default Header;
+export default Header

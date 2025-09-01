@@ -1,7 +1,7 @@
 export interface DialogPreview {
     id: number
     name: string
-    date: string
+    create_date: string
 }
 
 export interface NewMessage {

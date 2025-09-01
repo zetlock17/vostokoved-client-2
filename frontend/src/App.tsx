@@ -1,8 +1,9 @@
-import { Navigate, Route, Routes } from 'react-router-dom';
+import { Route, Routes } from 'react-router-dom';
 // import Header from './components/Header';
 // import MainPage from './components/MainPage';
 import ChatPage from './components/ChatPage';
 import ProtectedRoute from './components/ProtectedRoute';
+import MainPage from './components/MainPage';
 
 function App() {
   return (
@@ -10,7 +11,7 @@ function App() {
         <main className="flex-1">
           <Routes>
             <Route element={<ProtectedRoute />}>
-              <Route path="/" element={<Navigate to="/chat/new" />} />
+              <Route path="/" element={<MainPage />} />
               <Route path="/chat/new" element={<ChatPage />} />
               <Route path="/chat/:id" element={<ChatPage />} />
             </Route>
